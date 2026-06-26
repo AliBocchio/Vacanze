@@ -36,7 +36,7 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
-  overflow-x: hidden;
+  /* overflow-x: hidden rimosso: blocca position:sticky su Chrome */
 }
 
 /* Background gradient blobs */
@@ -540,8 +540,9 @@ body::after {
   overflow-x: auto;
   overflow-y: visible;
   border-radius: var(--radius-md);
-  -webkit-overflow-scrolling: touch;
-  /* Fade-out hint on right edge when content overflows */
+  -webkit-overflow-scrolling: touch; /* Safari */
+  overscroll-behavior-x: contain;    /* Chrome: evita scroll della pagina */
+  touch-action: pan-x pan-y;         /* Chrome mobile: abilita swipe orizzontale */
   position: relative;
 }
 
@@ -601,7 +602,9 @@ body::after {
   padding: 0;
 }
 
-/* ── Sticky date column (left) ── */
+/* ── Sticky date column (left) ──
+   CRITICO: background DEVE essere opaco, altrimenti su Chrome il contenuto
+   scorre SOTTO la colonna sticky ed è visibile in trasparenza. */
 .gantt-date-col {
   position: sticky;
   left: 0;
@@ -609,6 +612,8 @@ body::after {
   width: 42px;
   min-width: 42px;
   border-right: 2px solid rgba(255,255,255,0.1) !important;
+  /* Sfondo opaco — fondamentale per Chrome */
+  background: var(--bg-dark);
 }
 
 .gantt-corner {
@@ -742,6 +747,16 @@ body::after {
 }
 .gantt-day-row.is-today .gantt-person-cell {
   background: rgba(247,129,102,0.05) !important;
+}
+
+/* Tutti-in-vacanza indicator */
+.all-away-icon {
+  display: block;
+  font-size: 0.65rem;
+  line-height: 1;
+  text-align: center;
+  margin-top: 1px;
+  animation: pulse-unregistered 2s ease-in-out infinite;
 }
 
 /* Date cell (sticky left) */

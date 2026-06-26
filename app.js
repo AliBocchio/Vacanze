@@ -29,8 +29,15 @@ if (FIREBASE_READY) {
 const IDENTITY_KEY = 'vacanze_identity_2026';
 
 // ── Summer range ──────────────────────────────────────────────
-const SUMMER_START = new Date(2026, 5, 1);
-const SUMMER_END   = new Date(2026, 8, 30);
+// Il calendario parte sempre da OGGI (o da Giugno 1 se siamo prima dell'estate)
+const SUMMER_END = new Date(2026, 8, 30);
+
+function getSummerStart() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const june1 = new Date(2026, 5, 1);
+  return today > june1 ? today : june1;
+}
 
 const MONTHS    = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
                    'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -470,10 +477,20 @@ document.getElementById('switchUserBtn').addEventListener('click', () => {
 // ─────────────────────────────────────────────────────────────
 
 function buildDayList() {
-  const days = [];
-  let cur = new Date(SUMMER_START);
+  const days  = [];
+  let cur = new Date(getSummerStart()); // parte da oggi
   while (cur <= SUMMER_END) { days.push(new Date(cur)); cur.setDate(cur.getDate() + 1); }
   return days;
+}
+
+// Restituisce true se TUTTI i 12 familiari hanno una vacanza in quel giorno.
+// Usato per mostrare ⚠️ nella colonna data.
+function isEveryoneAway(day) {
+  // Considera solo i membri che hanno inserito almeno una vacanza;
+  // se un membro non ha inserito nulla, è considerato "a casa" → non scatta l'alert.
+  const membersWithData = new Set(vacations.map(v => v.name));
+  if (membersWithData.size < FAMILY_MEMBERS.length) return false; // qualcuno non ha ancora dati
+  return FAMILY_MEMBERS.every(name => findVacationForDay(name, day) !== null);
 }
 
 function groupByMonth(days) {
@@ -629,9 +646,12 @@ function renderGantt() {
 
       const dateTd = document.createElement('td');
       dateTd.className = 'gantt-date-col gantt-date-cell';
+      const allAway = isEveryoneAway(day);
       dateTd.innerHTML = `
         <span class="date-num">${day.getDate()}</span>
-        <span class="date-name">${DAY_NAMES[day.getDay()]}</span>`;
+        <span class="date-name">${DAY_NAMES[day.getDay()]}</span>${
+          allAway ? '<span class="all-away-icon" title="Tutti in vacanza!">⚠️</span>' : ''
+        }`;
       tr.appendChild(dateTd);
 
       for (const col of columns) {
