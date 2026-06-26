@@ -649,7 +649,6 @@ function renderGantt() {
             td.style.background =
               `linear-gradient(135deg, ${hexToRgba(col.color, 0.7)} 50%, ${hexToRgba(col.color2, 0.7)} 50%)`;
             const pairEmoji = getDestinationEmoji(foundVac.destination);
-            td.setAttribute('title', `${col.label} — ${pairEmoji} ${foundVac.destination}`);
             const startD  = parseLocalDate(foundVac.startDate);
             const endD    = parseLocalDate(foundVac.endDate);
             const isStart = isSameDay(day, startD);
@@ -658,11 +657,19 @@ function renderGantt() {
             else if (isStart)      td.style.borderRadius = '8px 8px 0 0';
             else if (isEnd)        td.style.borderRadius = '0 0 8px 8px';
             if (isStart) {
-              const label = document.createElement('span');
-              label.className = 'dest-label';
-              label.textContent = `${pairEmoji} ${foundVac.destination}`;
-              td.appendChild(label);
+              const ind = document.createElement('span');
+              ind.className = 'dest-emoji-indicator';
+              ind.textContent = pairEmoji;
+              td.appendChild(ind);
             }
+            td.dataset.tooltipName   = col.label;
+            td.dataset.tooltipColor  = col.color;
+            td.dataset.tooltipColor2 = col.color2;
+            td.dataset.tooltipDest   = `${pairEmoji} ${foundVac.destination}`;
+            td.dataset.tooltipStart  = foundVac.startDate;
+            td.dataset.tooltipEnd    = foundVac.endDate;
+            td.dataset.tooltipPair   = 'true';
+            td.classList.add('has-tooltip');
           }
         } else {
           const vac = findVacationForDay(col.name, day);
@@ -670,7 +677,6 @@ function renderGantt() {
             td.classList.add('away-cell');
             td.style.background = hexToRgba(col.color, 0.65);
             const destEmoji = getDestinationEmoji(vac.destination);
-            td.setAttribute('title', `${col.name} — ${destEmoji} ${vac.destination}`);
             const startD  = parseLocalDate(vac.startDate);
             const endD    = parseLocalDate(vac.endDate);
             const isStart = isSameDay(day, startD);
@@ -679,11 +685,17 @@ function renderGantt() {
             else if (isStart)      td.style.borderRadius = '8px 8px 0 0';
             else if (isEnd)        td.style.borderRadius = '0 0 8px 8px';
             if (isStart) {
-              const label = document.createElement('span');
-              label.className = 'dest-label';
-              label.textContent = `${destEmoji} ${vac.destination}`;
-              td.appendChild(label);
+              const ind = document.createElement('span');
+              ind.className = 'dest-emoji-indicator';
+              ind.textContent = destEmoji;
+              td.appendChild(ind);
             }
+            td.dataset.tooltipName  = col.name;
+            td.dataset.tooltipColor = col.color;
+            td.dataset.tooltipDest  = `${destEmoji} ${vac.destination}`;
+            td.dataset.tooltipStart = vac.startDate;
+            td.dataset.tooltipEnd   = vac.endDate;
+            td.classList.add('has-tooltip');
           }
         }
 
@@ -697,7 +709,65 @@ function renderGantt() {
   table.appendChild(tbody);
   wrapper.innerHTML = '';
   wrapper.appendChild(table);
+
+  // Attach tap-tooltip to all away cells after render
+  wrapper.querySelectorAll('.has-tooltip').forEach(cell => {
+    cell.addEventListener('click', onCellTap);
+  });
 }
+
+// ─────────────────────────────────────────────────────────────
+//  TAP-TOOLTIP  (funziona sia su mobile che desktop)
+// ─────────────────────────────────────────────────────────────
+
+function closeCellTooltip() {
+  const t = document.getElementById('cellTooltip');
+  if (t) t.remove();
+}
+
+function onCellTap(e) {
+  e.stopPropagation();
+  closeCellTooltip();
+
+  const d        = e.currentTarget.dataset;
+  const startD   = parseLocalDate(d.tooltipStart);
+  const endD     = parseLocalDate(d.tooltipEnd);
+  const duration = daysBetween(startD, endD);
+
+  const dotsHtml = d.tooltipPair === 'true'
+    ? `<span class="cell-tooltip-dot" style="background:${d.tooltipColor};"></span>
+       <span class="cell-tooltip-dot" style="background:${d.tooltipColor2};"></span>`
+    : `<span class="cell-tooltip-dot" style="background:${d.tooltipColor};"></span>`;
+
+  const tip = document.createElement('div');
+  tip.id = 'cellTooltip';
+  tip.className = 'cell-tooltip';
+  tip.innerHTML = `
+    <div class="cell-tooltip-name">${dotsHtml} ${escapeHtml(d.tooltipName)}</div>
+    <div class="cell-tooltip-dest">${escapeHtml(d.tooltipDest)}</div>
+    <div class="cell-tooltip-dates">${formatDateIT(startD)} → ${formatDateIT(endD)}</div>
+    <div class="cell-tooltip-duration">${duration} ${duration === 1 ? 'giorno' : 'giorni'}</div>
+  `;
+  document.body.appendChild(tip);
+
+  // Position near tapped cell, keep inside viewport
+  const rect = e.currentTarget.getBoundingClientRect();
+  const tw   = tip.offsetWidth  || 190;
+  const th   = tip.offsetHeight || 110;
+  let left   = rect.left + rect.width / 2 - tw / 2;
+  let top    = rect.bottom + 8;
+  left = Math.max(8, Math.min(left, window.innerWidth  - tw - 8));
+  if (top + th > window.innerHeight - 8) top = rect.top - th - 8;
+  tip.style.left = `${left}px`;
+  tip.style.top  = `${top}px`;
+
+  // Close on next tap anywhere
+  setTimeout(() => {
+    document.addEventListener('click', closeCellTooltip, { once: true });
+  }, 50);
+}
+
+
 
 // ─────────────────────────────────────────────────────────────
 //  RENDER CARDS
