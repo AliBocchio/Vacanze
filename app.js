@@ -29,14 +29,11 @@ if (FIREBASE_READY) {
 const IDENTITY_KEY = 'vacanze_identity_2026';
 
 // ── Summer range ──────────────────────────────────────────────
-// Il calendario parte sempre da OGGI (o da Giugno 1 se siamo prima dell'estate)
+// Parte fisso dal 26 giugno 2026
 const SUMMER_END = new Date(2026, 8, 30);
 
 function getSummerStart() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const june1 = new Date(2026, 5, 1);
-  return today > june1 ? today : june1;
+  return new Date(2026, 5, 26); // 26 giugno 2026 — fisso
 }
 
 const MONTHS    = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
