@@ -50,10 +50,11 @@ const FAMILY_MEMBERS = [
   'Lucia','Cristina','Diego','Zia Silvia',
 ];
 
-// ── Fixed travel pairs ────────────────────────────────────────
+// ── Fixed travel pairs ────────────────────────────────────────────
 const TRAVEL_PAIRS = [
-  { members: ['Lucilla', 'Roberto'] },
-  { members: ['Diego',   'Cristina'] },
+  { members: ['Lucilla',     'Roberto']       },
+  { members: ['Diego',       'Cristina']      },
+  { members: ['Nonna Adele', 'Nonno Peppino'] },
 ];
 
 // ── Color pool ────────────────────────────────────────────────
@@ -666,26 +667,35 @@ function renderGantt() {
           }
           if (foundVac) {
             td.classList.add('away-cell', 'pair-cell');
-            td.style.background =
-              `linear-gradient(135deg, ${hexToRgba(col.color, 0.7)} 50%, ${hexToRgba(col.color2, 0.7)} 50%)`;
             const pairEmoji = getDestinationEmoji(foundVac.destination);
             const startD  = parseLocalDate(foundVac.startDate);
             const endD    = parseLocalDate(foundVac.endDate);
             const isStart = isSameDay(day, startD);
             const isEnd   = isSameDay(day, endD);
+
+            if (foundVac.provisional) {
+              // Provvisorio: sfondo al 20%, bordo tratteggiato
+              td.classList.add('provisional-cell');
+              td.style.background = `linear-gradient(135deg, ${hexToRgba(col.color, 0.18)} 50%, ${hexToRgba(col.color2, 0.18)} 50%)`;
+              td.style.outline = `1.5px dashed ${hexToRgba(col.color, 0.5)}`;
+              td.style.outlineOffset = '-2px';
+            } else {
+              td.style.background = `linear-gradient(135deg, ${hexToRgba(col.color, 0.7)} 50%, ${hexToRgba(col.color2, 0.7)} 50%)`;
+            }
+
             if (isStart && isEnd)  td.style.borderRadius = '8px';
             else if (isStart)      td.style.borderRadius = '8px 8px 0 0';
             else if (isEnd)        td.style.borderRadius = '0 0 8px 8px';
             if (isStart) {
               const ind = document.createElement('span');
               ind.className = 'dest-emoji-indicator';
-              ind.textContent = pairEmoji;
+              ind.textContent = foundVac.provisional ? '⏳' : pairEmoji;
               td.appendChild(ind);
             }
             td.dataset.tooltipName   = col.label;
             td.dataset.tooltipColor  = col.color;
             td.dataset.tooltipColor2 = col.color2;
-            td.dataset.tooltipDest   = `${pairEmoji} ${foundVac.destination}`;
+            td.dataset.tooltipDest   = `${pairEmoji} ${foundVac.destination}${foundVac.provisional ? ' (provvisorio)' : ''}`;
             td.dataset.tooltipStart  = foundVac.startDate;
             td.dataset.tooltipEnd    = foundVac.endDate;
             td.dataset.tooltipPair   = 'true';
@@ -695,24 +705,33 @@ function renderGantt() {
           const vac = findVacationForDay(col.name, day);
           if (vac) {
             td.classList.add('away-cell');
-            td.style.background = hexToRgba(col.color, 0.65);
             const destEmoji = getDestinationEmoji(vac.destination);
             const startD  = parseLocalDate(vac.startDate);
             const endD    = parseLocalDate(vac.endDate);
             const isStart = isSameDay(day, startD);
             const isEnd   = isSameDay(day, endD);
+
+            if (vac.provisional) {
+              td.classList.add('provisional-cell');
+              td.style.background = hexToRgba(col.color, 0.18);
+              td.style.outline = `1.5px dashed ${hexToRgba(col.color, 0.5)}`;
+              td.style.outlineOffset = '-2px';
+            } else {
+              td.style.background = hexToRgba(col.color, 0.65);
+            }
+
             if (isStart && isEnd)  td.style.borderRadius = '8px';
             else if (isStart)      td.style.borderRadius = '8px 8px 0 0';
             else if (isEnd)        td.style.borderRadius = '0 0 8px 8px';
             if (isStart) {
               const ind = document.createElement('span');
               ind.className = 'dest-emoji-indicator';
-              ind.textContent = destEmoji;
+              ind.textContent = vac.provisional ? '⏳' : destEmoji;
               td.appendChild(ind);
             }
             td.dataset.tooltipName  = col.name;
             td.dataset.tooltipColor = col.color;
-            td.dataset.tooltipDest  = `${destEmoji} ${vac.destination}`;
+            td.dataset.tooltipDest  = `${destEmoji} ${vac.destination}${vac.provisional ? ' (provvisorio)' : ''}`;
             td.dataset.tooltipStart = vac.startDate;
             td.dataset.tooltipEnd   = vac.endDate;
             td.classList.add('has-tooltip');
@@ -820,11 +839,22 @@ function renderCards() {
       companionBadge = `<div class="card-companions">✈️ con ${escapeHtml(partner)}</div>`;
     }
 
+    const provisionalBadge = v.provisional
+      ? `<div class="provisional-badge">⏳ Provvisorio</div>`
+      : '';
+
     const card = document.createElement('div');
-    card.className = 'vacation-card';
+    card.className = 'vacation-card' + (v.provisional ? ' provisional' : '');
     card.id = `card-${v.id}`;
+
+    // Barra laterale colorata: al 40% se provvisorio
+    const barAlpha = v.provisional ? 0.35 : 1;
+    const barBg    = v.provisional
+      ? `repeating-linear-gradient(-45deg, ${hexToRgba(color,0.4)}, ${hexToRgba(color,0.4)} 4px, ${hexToRgba(color,0.15)} 4px, ${hexToRgba(color,0.15)} 8px)`
+      : color;
+
     card.innerHTML = `
-      <div style="position:absolute;top:0;left:0;width:4px;height:100%;background:${color};border-radius:4px 0 0 4px;"></div>
+      <div style="position:absolute;top:0;left:0;width:4px;height:100%;background:${barBg};border-radius:4px 0 0 4px;"></div>
       <div class="card-header">
         <div class="card-name">
           <span class="card-dot" style="background:${color};"></span>
@@ -838,6 +868,7 @@ function renderCards() {
       <div class="card-dest">${emoji} ${escapeHtml(v.destination)}</div>
       <div class="card-dates">${formatDateIT(startD)} → ${formatDateIT(endD)}</div>
       ${companionBadge}
+      ${provisionalBadge}
       <div class="card-duration">${duration} ${duration === 1 ? 'giorno' : 'giorni'}</div>
     `;
     grid.appendChild(card);
@@ -850,7 +881,7 @@ function render() { renderGantt(); renderCards(); }
 //  VACATION SAVE
 // ─────────────────────────────────────────────────────────────
 
-function commitSave(name, dest, start, end, withPartner) {
+function commitSave(name, dest, start, end, withPartner, provisional) {
   const color   = getPersonColor(name);
   const partner = getTravelPartner(name);
   const groupId = uid();
@@ -859,6 +890,7 @@ function commitSave(name, dest, start, end, withPartner) {
     id: uid(), groupId, name,
     destination: dest, startDate: start, endDate: end,
     color, withPartner: withPartner && !!partner,
+    provisional: !!provisional,
   });
 
   if (withPartner && partner) {
@@ -866,15 +898,15 @@ function commitSave(name, dest, start, end, withPartner) {
       id: uid(), groupId, name: partner,
       destination: dest, startDate: start, endDate: end,
       color: getPersonColor(partner), withPartner: true,
+      provisional: !!provisional,
     });
-    showToast(`🌴 Aggiunti: ${name} e ${partner}!`);
+    showToast(provisional ? `⏳ Aggiunti (provvisorio): ${name} e ${partner}` : `🌴 Aggiunti: ${name} e ${partner}!`);
   } else {
-    showToast('🌴 Periodo aggiunto!');
+    showToast(provisional ? '⏳ Periodo provvisorio aggiunto!' : '🌴 Periodo aggiunto!');
   }
 
   saveData();
   closeModal();
-  // render() verrà chiamato automaticamente dal listener Firebase
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -901,14 +933,14 @@ function showPairConfirm(data) {
 document.getElementById('pairConfirmYesBtn').addEventListener('click', () => {
   if (!pendingSave) return;
   pairConfirmOverlay.classList.remove('open');
-  commitSave(pendingSave.name, pendingSave.dest, pendingSave.start, pendingSave.end, true);
+  commitSave(pendingSave.name, pendingSave.dest, pendingSave.start, pendingSave.end, true, pendingSave.provisional);
   pendingSave = null;
 });
 
 document.getElementById('pairConfirmNoBtn').addEventListener('click', () => {
   if (!pendingSave) return;
   pairConfirmOverlay.classList.remove('open');
-  commitSave(pendingSave.name, pendingSave.dest, pendingSave.start, pendingSave.end, false);
+  commitSave(pendingSave.name, pendingSave.dest, pendingSave.start, pendingSave.end, false, pendingSave.provisional);
   pendingSave = null;
 });
 
@@ -933,6 +965,7 @@ function closeModal() {
   editingId = null;
   document.getElementById('editId').value = '';
   document.getElementById('destEmojiPreview').textContent = '📍';
+  document.getElementById('provisionalCheck').checked = false;
 }
 
 function openEditModal(id) {
@@ -944,6 +977,7 @@ function openEditModal(id) {
   document.getElementById('destination').value = v.destination;
   document.getElementById('startDate').value   = v.startDate;
   document.getElementById('endDate').value     = v.endDate;
+  document.getElementById('provisionalCheck').checked = !!v.provisional;
   document.getElementById('destEmojiPreview').textContent = getDestinationEmoji(v.destination);
   openModal('✏️ Modifica Periodo di Vacanza');
 }
@@ -1021,17 +1055,19 @@ form.addEventListener('submit', e => {
   e.preventDefault();
   if (!validateForm()) return;
 
-  const name  = document.getElementById('personName').value;
-  const dest  = document.getElementById('destination').value.trim();
-  const start = document.getElementById('startDate').value;
-  const end   = document.getElementById('endDate').value;
-  const id    = document.getElementById('editId').value;
-  const color = getPersonColor(name);
+  const name        = document.getElementById('personName').value;
+  const dest        = document.getElementById('destination').value.trim();
+  const start       = document.getElementById('startDate').value;
+  const end         = document.getElementById('endDate').value;
+  const id          = document.getElementById('editId').value;
+  const provisional = document.getElementById('provisionalCheck').checked;
+  const color       = getPersonColor(name);
 
   if (id) {
+    // Modifica esistente
     const idx = vacations.findIndex(v => v.id === id);
     if (idx !== -1) {
-      vacations[idx] = { ...vacations[idx], name, destination: dest, startDate: start, endDate: end, color };
+      vacations[idx] = { ...vacations[idx], name, destination: dest, startDate: start, endDate: end, color, provisional };
       showToast('✅ Periodo aggiornato!');
       saveData();
       closeModal();
@@ -1041,9 +1077,9 @@ form.addEventListener('submit', e => {
 
   const partner = getTravelPartner(name);
   if (partner) {
-    showPairConfirm({ name, dest, start, end });
+    showPairConfirm({ name, dest, start, end, provisional });
   } else {
-    commitSave(name, dest, start, end, false);
+    commitSave(name, dest, start, end, false, provisional);
   }
 });
 

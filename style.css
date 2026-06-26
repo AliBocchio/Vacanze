@@ -24,6 +24,8 @@
   --shadow:        0 8px 32px rgba(0,0,0,0.4);
   --shadow-sm:     0 2px 8px rgba(0,0,0,0.3);
   --transition:    0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Impedisce al browser di modificare automaticamente i colori dell'app */
+  color-scheme: dark;
 }
 
 html {
@@ -36,7 +38,7 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
-  /* overflow-x: hidden rimosso: blocca position:sticky su Chrome */
+  overflow-x: hidden; /* ripristinato: senza questo il layout si rompe */
 }
 
 /* Background gradient blobs */
@@ -1388,4 +1390,109 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .reg-title { font-size: 1.35rem; }
 
   .pair-confirm-actions { flex-direction: column; }
+}
+
+/* ============================================================
+   VACANZA PROVVISORIA
+   ============================================================ */
+
+/* Card con bordo tratteggiato */
+.vacation-card.provisional {
+  border: 1.5px dashed var(--border-hover) !important;
+  background: var(--bg-card) !important;
+}
+
+.vacation-card.provisional .provisional-stripe {
+  opacity: 0.5;
+  background-repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 4px,
+    rgba(255,255,255,0.04) 4px,
+    rgba(255,255,255,0.04) 8px
+  );
+}
+
+.provisional-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px dashed var(--border-hover);
+  border-radius: 20px;
+  padding: 0.15rem 0.55rem;
+  margin-top: 0.2rem;
+  width: fit-content;
+}
+
+/* Gantt: cella provvisoria (sfondo al 20%, outline tratteggiato) */
+.gantt-person-cell.away-cell.provisional-cell {
+  opacity: 0.75;
+}
+
+/* ── Toggle checkbox provvisorio ── */
+.provisional-toggle {
+  margin-top: 0.25rem;
+}
+
+.provisional-label {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  user-select: none;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--border);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.provisional-label:hover {
+  border-color: var(--border-hover);
+  background: rgba(255,255,255,0.03);
+}
+
+.provisional-label input[type="checkbox"] {
+  display: none; /* nascosto, usiamo UI custom */
+}
+
+.provisional-check-ui {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border-hover);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+.provisional-label input:checked + .provisional-check-ui {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.provisional-label input:checked + .provisional-check-ui::after {
+  content: '✓';
+  font-size: 11px;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.provisional-label input:checked ~ span {
+  color: var(--accent);
+}
+
+.provisional-label:has(input:checked) {
+  border-color: var(--accent);
+  border-style: dashed;
+  background: rgba(247,129,102,0.05);
 }

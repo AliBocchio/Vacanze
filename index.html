@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Dice al browser che l'app è già dark: non toccare i colori -->
+  <meta name="color-scheme" content="dark" />
   <title>Vacanze di Famiglia 🌴</title>
   <meta name="description" content="Traccia i periodi di vacanza di tutta la famiglia con un pratico calendario Gantt estivo." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -162,6 +164,15 @@
           </div>
         </div>
 
+
+        <!-- Toggle: periodo provvisorio -->
+        <div class="form-group provisional-toggle">
+          <label class="provisional-label">
+            <input type="checkbox" id="provisionalCheck" />
+            <span class="provisional-check-ui"></span>
+            <span>⏳ Periodo <strong>provvisorio</strong> (non ancora confermato)</span>
+          </label>
+        </div>
 
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" id="cancelBtn">Annulla</button>
