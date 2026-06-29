@@ -482,14 +482,17 @@ function buildDayList() {
   return days;
 }
 
-// Restituisce true se TUTTI i 12 familiari hanno una vacanza in quel giorno.
-// Usato per mostrare ⚠️ nella colonna data.
+// Restituisce true se TUTTI i familiari (esclusi Nonna Adele e Nonno Peppino) 
+// hanno una vacanza in quel giorno. Usato per mostrare ⚠️ nella colonna data.
 function isEveryoneAway(day) {
-  // Considera solo i membri che hanno inserito almeno una vacanza;
-  // se un membro non ha inserito nulla, è considerato "a casa" → non scatta l'alert.
+  const requiredMembers = FAMILY_MEMBERS.filter(name => name !== 'Nonna Adele' && name !== 'Nonno Peppino');
   const membersWithData = new Set(vacations.map(v => v.name));
-  if (membersWithData.size < FAMILY_MEMBERS.length) return false; // qualcuno non ha ancora dati
-  return FAMILY_MEMBERS.every(name => findVacationForDay(name, day) !== null);
+  
+  // L'alert si attiva solo se tutti i membri richiesti hanno inserito almeno una vacanza (per evitare falsi allarmi a calendario vuoto)
+  const allRequiredHaveData = requiredMembers.every(name => membersWithData.has(name));
+  if (!allRequiredHaveData) return false;
+
+  return requiredMembers.every(name => findVacationForDay(name, day) !== null);
 }
 
 function groupByMonth(days) {
