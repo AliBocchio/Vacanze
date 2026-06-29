@@ -774,8 +774,8 @@ body::after {
   color: #fff;
   font-weight: 700;
 }
-.gantt-day-row.is-today .gantt-person-cell {
-  background: rgba(247,129,102,0.05) !important;
+.gantt-day-row.is-today .gantt-person-cell:not(.away-cell) {
+  background: rgba(247,129,102,0.05);
 }
 
 /* Tutti-in-vacanza indicator */
