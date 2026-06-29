@@ -588,20 +588,35 @@ body::after {
   line-height: 1.7;
 }
 
-/* Table base — width:max-content permette lo scroll orizzontale quando
-   ci sono troppe persone per la larghezza dello schermo */
+/* Table base — border-collapse:separate è FONDAMENTALE per position:sticky
+   in Chrome: con collapse, il browser ignora la sticky column.
+   border-spacing:0 annulla lo spazio tra le celle. */
 .gantt-table {
-  border-collapse: collapse;
-  width: max-content;   /* la tabella si espande liberamente */
-  min-width: 100%;      /* ma occupa almeno tutta la larghezza disponibile */
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
   font-size: 0.8rem;
-  /* NO table-layout:fixed — ogni colonna si dimensiona sul suo contenuto */
 }
 
+/* Con border-collapse:separate i bordi si sommano tra celle adiacenti.
+   Usiamo solo border-right e border-bottom per evitare il raddoppio. */
 .gantt-table th,
 .gantt-table td {
-  border: 1px solid rgba(255,255,255,0.04);
+  border-right: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-left: none;
+  border-top: none;
   padding: 0;
+}
+/* Prima colonna: ripristina il bordo sinistro */
+.gantt-table th:first-child,
+.gantt-table td:first-child {
+  border-left: 1px solid rgba(255,255,255,0.04);
+}
+/* Prima riga: ripristina il bordo superiore */
+.gantt-header-row th {
+  border-top: 1px solid rgba(255,255,255,0.04);
 }
 
 /* ── Sticky date column (left) ──
@@ -618,6 +633,8 @@ body::after {
   background: var(--bg-dark);
 }
 
+/* ── Angolo in alto a sinistra: sticky SIA top SIA left ──
+   z-index:10 > qualsiasi altro sticky della tabella */
 .gantt-corner {
   background: var(--bg-card2) !important;
   font-size: 0.7rem;
@@ -627,9 +644,13 @@ body::after {
   letter-spacing: 0.06em;
   padding: 0.5rem 0.5rem;
   text-align: center;
+  position: sticky !important;
+  top: 0;
+  left: 0;
+  z-index: 10 !important;
 }
 
-/* ── Person header cells (vertical text) ── */
+/* ── Person header cells ── */
 .gantt-header-row th {
   background: var(--bg-card2);
   vertical-align: bottom;
@@ -735,15 +756,17 @@ body::after {
   background: #0d1117;
 }
 
-/* Weekend */
+/* Weekend — sfondo SOLIDO (non rgba) perché le celle scrollano
+   dietro la colonna sticky e un rgba mostrerebbe il contenuto in trasparenza */
 .gantt-day-row.is-weekend .gantt-date-cell {
-  background: rgba(247,129,102,0.06) !important;
+  background: #16111d !important;
   color: #f78166;
 }
 
-/* Today */
+/* Today — sfondo solido calcolato come blend di rgba(247,129,102,0.2)
+   sopra il colore di sfondo scuro */
 .gantt-day-row.is-today .gantt-date-cell {
-  background: rgba(247,129,102,0.2) !important;
+  background: #3c2727 !important;
   color: #fff;
   font-weight: 700;
 }
