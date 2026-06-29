@@ -38,7 +38,10 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
-  overflow-x: hidden; /* ripristinato: senza questo il layout si rompe */
+  /* overflow-x: clip blocca l'overflow orizzontale SENZA creare
+     uno scroll container — così position:fixed funziona correttamente
+     su iOS Safari e Chrome mobile (hidden invece lo rompe). */
+  overflow-x: clip;
 }
 
 /* Background gradient blobs */
@@ -1012,20 +1015,24 @@ body::after {
 /* ============================================================
    MODAL
    ============================================================ */
+
+
+/* Backdrop: copre tutto lo schermo, centra la modale */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.75);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  /* Nascosta di default */
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s;
+  transition: opacity 0.22s ease;
 }
 
 .modal-backdrop.open {
@@ -1033,49 +1040,66 @@ body::after {
   pointer-events: all;
 }
 
+/* Pannello modale */
 .modal {
   background: var(--bg-card);
-  border: 1px solid var(--border-hover);
+  border: 1.5px solid rgba(255,255,255,0.2);
   border-radius: var(--radius-lg);
-  padding: 1.8rem;
+  padding: 1.75rem;
   width: 100%;
-  max-width: 520px;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
-  transform: scale(0.95) translateY(20px);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 480px;
+  max-height: 90dvh;         /* non fuoriesce su schermi piccoli */
+  overflow-y: auto;
+  box-shadow: 0 32px 96px rgba(0,0,0,0.7),
+              0 0 0 1px rgba(255,255,255,0.05) inset;
+  /* Animazione: entra dal basso con leggero rimbalzo */
+  transform: translateY(24px) scale(0.97);
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity  0.22s ease;
+  opacity: 0;
 }
 
 .modal-backdrop.open .modal {
-  transform: scale(1) translateY(0);
+  transform: translateY(0) scale(1);
+  opacity: 1;
 }
 
+/* Intestazione modale */
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   gap: 1rem;
 }
 
 .modal-header h2 {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
+  color: var(--text-primary);
 }
 
+/* Pulsante chiudi (×) */
 .modal-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
-  color: var(--text-secondary);
+  font-size: 1.4rem;
+  color: var(--text-muted);
   cursor: pointer;
   line-height: 1;
-  padding: 0.2rem 0.4rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 6px;
-  transition: var(--transition);
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
 }
-.modal-close:hover { background: var(--bg-card2); color: var(--text-primary); }
+.modal-close:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-primary);
+}
 
-/* Form */
+/* ── Form ── */
 .modal-form {
   display: flex;
   flex-direction: column;
@@ -1090,24 +1114,26 @@ body::after {
 }
 
 .form-group label {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: 0.03em;
 }
 
+/* Input, date picker e select */
 .form-group input[type="text"],
 .form-group input[type="date"],
 .form-group select {
   background: var(--bg-card2);
-  border: 1px solid var(--border);
+  border: 1.5px solid rgba(255,255,255,0.14);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: inherit;
   font-size: 0.9rem;
   padding: 0.65rem 0.9rem;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition: border-color 0.18s, box-shadow 0.18s;
   outline: none;
+  width: 100%;
 }
 
 .form-group select {
@@ -1117,7 +1143,8 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b949e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.9rem center;
-  padding-right: 2.2rem;
+  background-size: 12px;
+  padding-right: 2.4rem;
 }
 
 .form-group select option {
@@ -1125,11 +1152,61 @@ body::after {
   color: var(--text-primary);
 }
 
+/* Focus */
 .form-group input:focus,
 .form-group select:focus {
-  border-color: rgba(247,129,102,0.6);
+  border-color: rgba(247,129,102,0.7);
   box-shadow: 0 0 0 3px rgba(247,129,102,0.12);
 }
+
+/* Stato errore */
+.form-group input.error,
+.form-group select.error {
+  border-color: rgba(255, 80, 80, 0.7);
+  box-shadow: 0 0 0 3px rgba(255,80,80,0.12);
+}
+
+.form-error {
+  font-size: 0.75rem;
+  color: #ff6b6b;
+  display: none;
+}
+.form-error.visible { display: block; }
+
+/* Riga con due campi data affiancati */
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Anteprima emoji destinazione */
+.dest-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dest-input-row input { flex: 1; }
+
+.dest-emoji-preview {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.dest-emoji-preview.bounce {
+  animation: emojiBounce 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* Azioni in fondo al form */
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  margin-top: 0.25rem;
+}
+
 
 .form-group input.error,
 .form-group select.error {
