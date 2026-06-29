@@ -30,7 +30,8 @@ const IDENTITY_KEY = 'vacanze_identity_2026';
 
 // ── Summer range ──────────────────────────────────────────────
 // Parte fisso dal 26 giugno 2026
-const SUMMER_END = new Date(2026, 8, 30);
+const SUMMER_END = new Date(2026, 7, 31); // 31 agosto 2026
+
 
 function getSummerStart() {
   return new Date(2026, 5, 26); // 26 giugno 2026 — fisso
