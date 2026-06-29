@@ -543,7 +543,8 @@ body::after {
 
 .gantt-wrapper {
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: auto;
+  max-height: 75vh;
   border-radius: var(--radius-md);
   -webkit-overflow-scrolling: touch; /* Safari */
   overscroll-behavior-x: contain;    /* Chrome: evita scroll della pagina */
