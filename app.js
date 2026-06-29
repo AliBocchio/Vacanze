@@ -658,12 +658,11 @@ function renderGantt() {
         td.className = 'gantt-person-cell';
 
         if (col.type === 'pair') {
-          let foundVac = null;
-          for (const member of col.members) {
-            foundVac = findVacationForDay(member, day);
-            if (foundVac) break;
-          }
-          if (foundVac) {
+          const vac0 = findVacationForDay(col.members[0], day);
+          const vac1 = findVacationForDay(col.members[1], day);
+          
+          if (vac0 || vac1) {
+            const foundVac = vac0 || vac1;
             td.classList.add('away-cell', 'pair-cell');
             const pairEmoji = getDestinationEmoji(foundVac.destination);
             const startD  = parseLocalDate(foundVac.startDate);
@@ -671,15 +670,31 @@ function renderGantt() {
             const isStart = isSameDay(day, startD);
             const isEnd   = isSameDay(day, endD);
 
-            if (foundVac.provisional) {
-              // Provvisorio: sfondo al 20%, bordo tratteggiato
-              td.classList.add('provisional-cell');
-              td.style.background = `linear-gradient(135deg, ${hexToRgba(col.color, 0.18)} 50%, ${hexToRgba(col.color2, 0.18)} 50%)`;
-              td.style.outline = `1.5px dashed ${hexToRgba(col.color, 0.5)}`;
-              td.style.outlineOffset = '-2px';
+            const isProvisional = vac0 && vac1 ? (vac0.provisional || vac1.provisional) : foundVac.provisional;
+            const opacityStr = isProvisional ? '0.18' : '0.7';
+            
+            let bgStyle = '';
+            let outlineColor = col.color;
+
+            if (vac0 && vac1) {
+              // Entrambi in vacanza
+              bgStyle = `linear-gradient(135deg, ${hexToRgba(col.color, opacityStr)} 50%, ${hexToRgba(col.color2, opacityStr)} 50%)`;
+            } else if (vac0) {
+              // Solo il primo membro
+              bgStyle = hexToRgba(col.color, opacityStr);
+              outlineColor = col.color;
             } else {
-              td.style.background = `linear-gradient(135deg, ${hexToRgba(col.color, 0.7)} 50%, ${hexToRgba(col.color2, 0.7)} 50%)`;
+              // Solo il secondo membro
+              bgStyle = hexToRgba(col.color2, opacityStr);
+              outlineColor = col.color2;
             }
+
+            if (isProvisional) {
+              td.classList.add('provisional-cell');
+              td.style.outline = `1.5px dashed ${hexToRgba(outlineColor, 0.5)}`;
+              td.style.outlineOffset = '-2px';
+            }
+            td.style.background = bgStyle;
 
             if (isStart && isEnd)  td.style.borderRadius = '8px';
             else if (isStart)      td.style.borderRadius = '8px 8px 0 0';
