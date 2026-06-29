@@ -890,6 +890,7 @@ body::after {
   font-size: 0.7rem;
   color: var(--text-muted);
   font-style: italic;
+}
 
 /* Month separator */
 .month-sep {
