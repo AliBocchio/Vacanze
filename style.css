@@ -1468,17 +1468,47 @@ input[type="date"]::-webkit-calendar-picker-indicator {
    RESPONSIVE
    ============================================================ */
 @media (max-width: 600px) {
+  /* Grid a 2 colonne:
+     - Riga 1: header-title (occupa entrambe le colonne)
+     - Riga 2: current-user-badge a sinistra | + Aggiungi periodo a destra */
   .header-inner {
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0.5rem 0.6rem;
+    align-items: center;
+    padding: 0.85rem 0;
   }
-  .header-title h1 { font-size: 1.05rem; }
+
+  .header-title {
+    grid-column: 1 / -1;   /* occupa tutta la riga 1 */
+    grid-row: 1;
+  }
+  .header-title h1  { font-size: 1.05rem; }
   .header-subtitle  { display: none; }
 
-  .current-user-badge { margin-right: 0; }
-  .current-user-name  { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .current-user-badge {
+    grid-column: 1;
+    grid-row: 2;
+    margin-right: 0;
+    min-width: 0;           /* permette il troncamento del testo */
+  }
+  .current-user-name {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-  .btn-primary span { display: none; }
+  /* Bottone "+ Aggiungi" in basso a destra, testo completo */
+  #openModalBtn {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    white-space: nowrap;
+  }
+  /* Mostra il testo anche su mobile */
+  .btn-primary span { display: inline; }
 
   .form-row { flex-direction: column; }
 
